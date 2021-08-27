@@ -35,7 +35,6 @@ APPNAME		:= main
 
 ifeq ($(OS),Windows_NT)
 MAIN		:= $(APPNAME).exe
-BUILDDIR	:= $(BUILD)
 SOURCEDIR	:= $(SRC)
 INCLUDEDIR	:= $(INCLUDE)
 LIBDIR		:= $(LIB)
@@ -45,7 +44,6 @@ MD		:= mkdir
 NULL		:= nul
 else
 MAIN		:= $(APPNAME)
-BUILDDIR	:= $(shell find $(BUILD) -type d)
 SOURCEDIR	:= $(shell find $(SRC) -type d)
 INCLUDEDIR	:= $(shell find $(INCLUDE) -type d)
 LIBDIR		:= $(shell find $(LIB) -type d)
@@ -81,13 +79,13 @@ all: $(OUTPUT) $(MAIN)
 
 $(OUTPUT):
 	@$(MD) $(OUTPUT)
-	@$(MD) $(BUILDDIR)
+	@$(MD) $(BUILD)
 $(MAIN): $(OBJECTS)
 	@echo Linkant fitxers
 	@$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
 
 #Compilació
-$(BUILDDIR)/%.o: $(SRC)/%.c
+$(BUILD)/%.o: $(SRC)/%.c
 	@echo Compilant $<
 	@$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -c -o $@ $<
 
