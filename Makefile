@@ -4,62 +4,72 @@
 #
 
 # define the C compiler to use
-CC = gcc
+CC 		:= gcc
 
 # define any compile-time flags
-CFLAGS	:= -Wall -Wextra -g
+CFLAGS		:= -Wall -Wextra -g
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
-LFLAGS =
+LFLAGS 		:=
 
 # define output directory
-OUTPUT	:= bin
+OUTPUT		:= bin
 
 # define source directory
 SRC		:= src
 
+#define build directory
+BUILD		:= build
+
 # define include directory
-INCLUDE	:= inc
+INCLUDE		:= inc
 
 # define lib directory
 LIB		:= lib
 
+# define application name
+APPNAME		:= main
+
 
 ifeq ($(OS),Windows_NT)
-MAIN		:= main.exe
-SOURCEDIRS	:= $(SRC)
-INCLUDEDIRS	:= $(INCLUDE)
-LIBDIRS		:= $(LIB)
+MAIN		:= $(APPNAME).exe
+BUILDDIR	:= $(BUILD)
+SOURCEDIR	:= $(SRC)
+INCLUDEDIR	:= $(INCLUDE)
+LIBDIR		:= $(LIB)
 FIXPATH 	= $(subst /,\,$1)
-RM			:= del /q /f
-MD			:= mkdir
+RM		:= del /q /f
+MD		:= mkdir
+NULL		:= nul
 else
-MAIN		:= main
-SOURCEDIRS	:= $(shell find $(SRC) -type d)
-INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
-LIBDIRS		:= $(shell find $(LIB) -type d)
+MAIN		:= $(APPNAME)
+BUILDDIR	:= $(shell find $(BUILD) -type d)
+SOURCEDIR	:= $(shell find $(SRC) -type d)
+INCLUDEDIR	:= $(shell find $(INCLUDE) -type d)
+LIBDIR		:= $(shell find $(LIB) -type d)
 FIXPATH 	= $1
-RM 			:= rm -f
-MD			:= mkdir -p
+RM 		:= rm -f
+MD		:= mkdir -p
+NULL		:= /dev/null
 endif
 
 # define any directories containing header files other than /usr/include
-INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
-INCLUDELIBS := $(patsubst %,-I%, $(LIBDIRS:%/=%))
+INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIR:%/=%))
+INCLUDELIBS 	:= $(patsubst %,-I%, $(LIBDIR:%/=%))
 
 # define the C libs
-LIBS		:= $(patsubst %,-L%, $(LIBDIRS:%/=%))
+LIBS		:= $(patsubst %,-L%, $(LIBDIR:%/=%))
 
 # define the C source files
-SOURCES		:= $(wildcard $(patsubst %,%/*.c, $(SOURCEDIRS)))
+SOURCES		:= $(wildcard $(patsubst %,%/*.c, $(SOURCEDIR)))
 
-# define the C object files 
-OBJECTS		:= $(SOURCES:.c=.o)
+# define the C object files
+OBJECTS		:= $(patsubst $(SRC)/%,$(BUILD)/%,$(SOURCES:.c=.o))
 
 #
-# The following part of the makefile is generic; it can be used to 
+# The following part of the makefile is generic; it can be used to
 # build any executable just by changing the definitions above and by
 # deleting dependencies appended to the file from 'make depend'
 #
@@ -70,22 +80,23 @@ all: $(OUTPUT) $(MAIN)
 	@echo Compilat correctament!
 
 $(OUTPUT):
-	$(MD) $(OUTPUT)
+	@$(MD) $(OUTPUT)
+	@$(MD) $(BUILDDIR)
+$(MAIN): $(OBJECTS)
+	@echo Linkant fitxers
+	@$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
 
-$(MAIN): $(OBJECTS) 
-	$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
-
-# this is a suffix replacement rule for building .o's from .c's
-# it uses automatic variables $<: the name of the prerequisite of
-# the rule(a .c file) and $@: the name of the target of the rule (a .o file) 
-# (see the gnu make manual section about automatic variables)
-.c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -c $<  -o $@
+#Compilació
+$(BUILDDIR)/%.o: $(SRC)/%.c
+	@echo Compilant $<
+	@$(CC) $(CFLAGS) $(INCLUDES) $(INCLUDELIBS) -c -o $@ $<
 
 .PHONY: clean
 clean:
-	$(RM) $(OUTPUTMAIN)
-	$(RM) $(call FIXPATH,$(OBJECTS))
+	@echo Esborrant $(OUTPUTMAIN)...
+	@$(RM) $(OUTPUTMAIN) 2> $(NULL)
+	@echo Esborrant $(call FIXPATH,$(OBJECTS))
+	@$(RM) $(call FIXPATH,$(OBJECTS)) 2> $(NULL)
 	@echo Netejat correctament!
 
 run: all
