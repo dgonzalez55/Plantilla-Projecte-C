@@ -1,9 +1,6 @@
-#include "rlutil.h"
-#include "llibreriaPropia.h"
+#include <stdio.h>
 
 int main(){
-	setColor(RED);
-	echo("Hello World!\n");
-	setColor(WHITE);
-	return (0);
+	printf("Hello World!\n");
+	return 0;
 }
